@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Vila n'Kosovë</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0ea5e9">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --brand: #0ea5e9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --bg-body: #f1f5f9;
+        }
+
+        body { 
+            background-color: var(--bg-body); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            margin: 0; 
+            padding: 10px; 
+        }
+        
+        .admin-container { 
+            max-width: 650px; 
+            margin: 30px auto; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+        }
+
+        .admin-form input, .admin-form textarea, .admin-form select { 
+            width: 100%; 
+            margin-bottom: 12px; 
+            padding: 14px; 
+            border-radius: 12px; 
+            border: 1px solid #e2e8f0; 
+            font-size: 1rem; 
+            box-sizing: border-box;
+            font-family: inherit;
+            background: #f8fafc;
+            transition: 0.3s;
+        }
+
+        .admin-form input:focus, .admin-form select:focus {
+            outline: none;
+            border-color: var(--brand);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+
+        .admin-form h2 { 
+            margin-bottom: 25px; 
+            color: var(--text-main); 
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-admin {
+            width: 100%;
+            padding: 16px;
+            background: var(--brand);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-admin:hover {
+            background: #0284c7;
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            width: 100%;
+            padding: 14px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: none;
+            border-radius: 15px;
+            font-weight: 600;
+            margin-top: 12px;
+            cursor: pointer;
+            display: none; 
+            transition: 0.3s;
+        }
+        .btn-cancel:hover { background: #e2e8f0; }
+
+        .top-bar {
+            max-width: 650px;
+            margin: 20px auto 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .btn-logout:hover { background: #ef4444; color: white; }
+
+        .btn-home {
+            background: white;
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        /* Responsive Grid for Images & Coordinates */
+        .input-group-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin: 15px 0 10px 5px;
+            display: block;
+        }
+        
+        .multi-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 500px) {
+            .multi-row { grid-template-columns: 1fr; }
+            .admin-container { padding: 20px; border-radius: 20px; }
+            .amenities-grid { grid-template-columns: 1fr !important; }
+        }
+        
+        .coord-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: -5px 0 15px 5px;
+            display: block;
+        }
+
+        /* Amenities Section */
+        .amenities-section {
+            background: #f8fafc;
+            padding: 18px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+        }
+        .amenities-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .amenity-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #475569;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .amenity-item input {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 0;
+            accent-color: var(--brand);
+        }
+
+        /* List Management Cards */
+        .admin-vila-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            margin-bottom: 12px;
+            transition: 0.3s;
+        }
+        .admin-vila-card:hover { 
+            border-color: var(--brand); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .vila-meta h4 { margin: 0; font-size: 1rem; color: var(--text-main); }
+        .vila-meta p { margin: 3px 0 0 0; font-size: 0.85rem; color: var(--text-muted); }
+        
+        .action-btns {
+            display: flex;
+            gap: 12px;
+        }
+        .btn-edit { color: var(--brand); cursor: pointer; font-size: 1.2rem; background: none; border: none; padding: 5px; }
+        .btn-delete { color: #ef4444; cursor: pointer; font-size: 1.2rem; background: none; border: none; padding: 5px; }
+
+        textarea { resize: vertical; min-height: 100px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="index.html" class="btn-home"><i class="fa-solid fa-house"></i> Faqja Parë</a>
+        <button onclick="logout()" class="btn-logout">Dil (Logout)</button>
+    </div>
+
+    <div class="admin-container">
+        <form id="vilaForm" class="admin-form">
+            <h2 id="formTitle">Shto një Vilë të Re</h2>
+            
+            <input type="hidden" id="vilaId">
+
+            <input type="text" id="emri" placeholder="Emri i vilës (p.sh. Vila Rugova)" required>
+            <input type="text" id="lokacioni" placeholder="Lokacioni (p.sh. Pejë, Rugovë)" required>
+            
+            <div class="multi-row">
+                <input type="number" id="cmimi" placeholder="Çmimi /natë (€)" required>
+                <input type="tel" id="tel" placeholder="WhatsApp (p.sh. 38349123456)" required>
+            </div>
+            
+            <select id="kategoria" required>
+                <option value="" disabled selected>Zgjidh Kategorinë</option>
+                <option value="Me Pishinë">Me Pishinë</option>
+                <option value="Në Mal">Në Mal</option>
+                <option value="Me Oxhak">Me Oxhak</option>
+                <option value="Tradicionale">Tradicionale</option>
+                <option value="Moderne">Moderne</option>
+            </select>
+
+            <label class="input-group-title">Galeria e Imazheve (URL)</label>
+            <input type="text" id="imazhi" placeholder="Imazhi Kryesor (Linku)" required>
+            
+            <div class="multi-row">
+                <input type="text" id="imazhi2" placeholder="Imazhi 2 (Opsionale)">
+                <input type="text" id="imazhi3" placeholder="Imazhi 3 (Opsionale)">
+            </div>
+            <div class="multi-row">
+                <input type="text" id="imazhi4" placeholder="Imazhi 4 (Opsionale)">
+                <input type="text" id="imazhi5" placeholder="Imazhi 5 (Opsionale)">
+            </div>
+
+            <div class="amenities-section">
+                <p style="font-weight: 700; font-size: 0.9rem; color: var(--text-main); margin: 0;">Çfarë ofron kjo vilë?</p>
+                <div class="amenities-grid">
+                    <label class="amenity-item"><input type="checkbox" class="amenity" value="wifi"> Wi-Fi Falas</label>
+                    <label class="amenity-item"><input type="checkbox" class="amenity" value="parking"> Parking</label>
+                    <label class="amenity-item"><input type="checkbox" class="amenity" value="tv"> TV Kabllor</label>
+                    <label class="amenity-item"><input type="checkbox" class="amenity" value="grill"> Grill</label>
+                    <label class="amenity-item"><input type="checkbox" class="amenity" value="ac"> Klimatizim</label>
+                    <label class="amenity-item"><input type="checkbox" class="amenity" value="kuzhine"> Kuzhinë</label>
+                    <label class="amenity-item"><input type="checkbox" class="amenity" value="pool"> Pishinë</label>
+                </div>
+            </div>
+
+            <label class="input-group-title">Lokacioni Gjeografik (për Hartën)</label>
+            <div class="multi-row">
+                <input type="number" step="any" inputmode="decimal" id="lat" placeholder="Gjerësia (Lat)">
+                <input type="number" step="any" inputmode="decimal" id="lng" placeholder="Gjatësia (Lng)">
+            </div>
+            <small class="coord-hint">Merrni koordinatat në Google Maps (Right Click mbi lokacion).</small>
+
+            <textarea id="pershkrimi" placeholder="Përshkrimi i shkurtër i vilës..."></textarea>
+            
+            <button type="submit" id="submitBtn" class="btn-admin">Publiko Vilën</button>
+            <button type="button" id="cancelBtn" class="btn-cancel" onclick="anuloEditimin()">Anulo Editimin</button>
+        </form>
+    </div>
+
+    <div class="admin-container" style="margin-bottom: 50px;">
+        <h2 style="text-align: center; color: var(--text-main); font-size: 1.5rem;">Menaxho Vilat</h2>
+        <div id="listaMenaxhimit" class="lista-menaxhimit-container">
+            <p style="text-align: center; color: var(--text-muted);">Duke ngarkuar...</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="admin.js"></script>
+
+</body>
+</html>

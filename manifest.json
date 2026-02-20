@@ -1,0 +1,21 @@
+{
+  "short_name": "VilaKosovë",
+  "name": "Vila n'Kosovë - Rezervo Vilën Tënde",
+  "icons": [
+    {
+      "src": "ikona-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "ikona-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#f8fafc",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#0ea5e9"
+}

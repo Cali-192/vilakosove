@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detajet e Vilës - Vila n'Kosovë</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0ea5e9">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        :root {
+            --brand: #0ea5e9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --bg-body: #f8fafc;
+            --white: #ffffff;
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        body { 
+            background-color: var(--bg-body); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            margin: 0; 
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* Navigacioni - Sinkronizuar me faqet e tjera */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 8%;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo { 
+            cursor: pointer; 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            color: #0f172a;
+        }
+        .logo span { color: var(--brand); }
+
+        .details-container { padding: 30px 8%; max-width: 1400px; margin: 0 auto; }
+        
+        .back-btn { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            text-decoration: none; 
+            color: var(--text-muted); 
+            font-weight: 700; 
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+        }
+        .back-btn:hover { color: var(--brand); transform: translateX(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+        .details-grid { 
+            display: none; 
+            grid-template-columns: 1.6fr 1fr; 
+            gap: 40px; 
+            opacity: 0; 
+            transform: translateY(20px); 
+            transition: all 0.6s ease; 
+        }
+        .details-grid.loaded { display: grid; opacity: 1; transform: translateY(0); }
+
+        /* Slider Style */
+        .slider-container {
+            width: 100%;
+            height: 550px;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            background: #e2e8f0;
+            position: relative;
+        }
+        .slider-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .slider-img {
+            min-width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: 0.3s;
+        }
+        .slider-btn:hover { background: white; transform: translateY(-50%) scale(1.1); color: var(--brand); }
+        .prev-btn { left: 20px; }
+        .next-btn { right: 20px; }
+        
+        .slider-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: 0.3s; }
+        .dot.active { background: white; width: 22px; border-radius: 10px; }
+
+        /* Title & Info */
+        .title-section { margin-top: 35px; } 
+        .title-section h1 { font-size: 2.8rem; font-weight: 800; color: var(--text-main); margin: 10px 0; letter-spacing: -1.5px; }
+        .location-tag { color: var(--brand); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+        .description-box { margin-top: 35px; padding-top: 30px; border-top: 1px solid #e2e8f0; }
+        .description-box h3 { font-size: 1.4rem; margin-bottom: 15px; font-weight: 700; color: var(--text-main); }
+        .description-box p { color: #475569; font-size: 1.05rem; white-space: pre-line; }
+
+        .amenities-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-top: 20px; }
+        .amenity-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 14px 18px; 
+            background: white; 
+            border-radius: 18px; 
+            border: 1px solid #e2e8f0;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+        .amenity-item:hover { border-color: var(--brand); transform: translateY(-3px); }
+        .amenity-item i { color: var(--brand); font-size: 1.1rem; }
+
+        #map { 
+            height: 400px; 
+            width: 100%; 
+            border-radius: 25px; 
+            border: 1px solid #e2e8f0; 
+            margin-top: 15px; 
+            z-index: 1; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        /* Booking Card */
+        .info-card { 
+            background: white; 
+            padding: 35px; 
+            border-radius: 30px; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.08); 
+            position: sticky; 
+            top: 100px; 
+            border: 1px solid #f1f5f9;
+        }
+        .price-val { font-size: 2.5rem; font-weight: 800; color: var(--text-main); }
+        .price-label { color: var(--text-muted); font-size: 1.1rem; font-weight: 500; }
+
+        .whatsapp-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: #22c55e;
+            color: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.15rem;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 25px;
+            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
+        }
+        .whatsapp-btn:hover { background: #16a34a; transform: translateY(-3px); box-shadow: 0 15px 20px -3px rgba(34, 197, 94, 0.4); }
+
+        #loader { text-align: center; padding: 150px 20px; font-weight: 700; color: var(--brand); }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--brand); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 1024px) {
+            .details-grid { grid-template-columns: 1fr; gap: 30px; }
+            .slider-container { height: 400px; border-radius: 20px; }
+            .details-container { padding: 20px 5%; }
+            .info-card { position: static; }
+            .title-section h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='index.html'">
+            Vila n'<span>Kosovë</span>
+        </div>
+    </nav>
+
+    <div class="details-container">
+        <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Kthehu te lista</a>
+        
+        <div id="loader">
+            <div class="spinner"></div>
+            Duke përgatitur detajet e vilës...
+        </div>
+        
+        <div id="content" class="details-grid">
+            <div class="left-side">
+                <div class="slider-container" id="sliderContainer">
+                    <div class="slider-wrapper" id="sliderWrapper"></div>
+                    <button class="slider-btn prev-btn" onclick="moveSlide(-1)" id="prevBtn"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="slider-btn next-btn" onclick="moveSlide(1)" id="nextBtn"><i class="fa-solid fa-chevron-right"></i></button>
+                    <div class="slider-dots" id="sliderDots"></div>
+                </div>
+                
+                <div class="title-section">
+                    <div id="vilaLokacioni" class="location-tag"></div>
+                    <h1 id="vilaEmri"></h1>
+                </div>
+
+                <div class="description-box">
+                    <h3>Përshkrimi i Vilës</h3>
+                    <p id="vilaPershkrimi"></p>
+                </div>
+
+                <div class="description-box">
+                    <h3>Çfarë ofron kjo vilë</h3>
+                    <div id="amenitiesWrapper" class="amenities-grid"></div>
+                </div>
+
+                <div class="description-box" id="mapSection">
+                    <h3>Lokacioni i saktë</h3>
+                    <div id="map"></div>
+                </div>
+            </div>
+
+            <div class="right-side">
+                <div class="info-card">
+                    <div class="price-section">
+                        <span id="vilaCmimi" class="price-val"></span>
+                        <span class="price-label"> / natë</span>
+                    </div>
+                    
+                    <a id="waLink" href="#" target="_blank" class="whatsapp-btn">
+                        <i class="fab fa-whatsapp"></i> Rezervo përmes WhatsApp
+                    </a>
+
+                    <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid #f1f5f9;">
+                        <div style="display: flex; align-items: center; gap: 10px; color: #16a34a; font-weight: 700; margin-bottom: 12px; font-size: 1rem;">
+                            <i class="fa-solid fa-circle-check"></i> Rezervim i Drejtpërdrejtë
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+                            Komunikoni direkt me pronarin. Vila n'Kosovë nuk mbledh tarifa për rezervimet tuaja.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0LGt0z1gVH_I2FvnWZj2sy1YSfVXVGCk",
+            authDomain: "vilakosove.firebaseapp.com",
+            databaseURL: "https://vilakosove-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "vilakosove",
+            storageBucket: "vilakosove.firebasestorage.app",
+            messagingSenderId: "1060074168881",
+            appId: "1:1060074168881:web:8d8a6694a6559b91d8eb10"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+
+        let currentSlide = 0;
+        let totalSlides = 0;
+
+        const amenityIcons = {
+            wifi: { name: "Wi-Fi Falas", icon: "fa-wifi" },
+            parking: { name: "Parking Falas", icon: "fa-square-p" },
+            tv: { name: "TV & Netflix", icon: "fa-tv" },
+            grill: { name: "Grill / BBQ", icon: "fa-fire-burner" },
+            ac: { name: "Klimatizim", icon: "fa-snowflake" },
+            kuzhine: { name: "Kuzhinë e Kompletuar", icon: "fa-utensils" },
+            pool: { name: "Pishinë", icon: "fa-person-swimming" }
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const vilaId = urlParams.get('id');
+
+        if (vilaId) {
+            database.ref('vilat/' + vilaId).once('value', (snapshot) => {
+                const vila = snapshot.val();
+                
+                if (vila) {
+                    // Galeria
+                    const sliderWrapper = document.getElementById('sliderWrapper');
+                    const sliderDots = document.getElementById('sliderDots');
+                    
+                    const fotot = [];
+                    if(vila.imazhi) fotot.push(vila.imazhi);
+                    if(vila.imazhi2) fotot.push(vila.imazhi2);
+                    if(vila.imazhi3) fotot.push(vila.imazhi3);
+                    if(vila.imazhi4) fotot.push(vila.imazhi4);
+                    if(vila.imazhi5) fotot.push(vila.imazhi5);
+                    
+                    totalSlides = fotot.length;
+
+                    fotot.forEach((link, index) => {
+                        const img = document.createElement('img');
+                        img.src = link;
+                        img.className = "slider-img";
+                        sliderWrapper.appendChild(img);
+
+                        const dot = document.createElement('div');
+                        dot.className = `dot ${index === 0 ? 'active' : ''}`;
+                        dot.onclick = () => goToSlide(index);
+                        sliderDots.appendChild(dot);
+                    });
+
+                    if (totalSlides <= 1) {
+                        document.getElementById('prevBtn').style.display = 'none';
+                        document.getElementById('nextBtn').style.display = 'none';
+                        sliderDots.style.display = 'none';
+                    }
+
+                    // Te dhenat kryesore
+                    document.getElementById('vilaEmri').innerText = vila.emri;
+                    document.getElementById('vilaLokacioni').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${vila.lokacioni}`;
+                    document.getElementById('vilaPershkrimi').innerText = vila.pershkrimi || "Kjo vilë ofron një eksperiencë unike në zemër të natyrës së Kosovës.";
+                    document.getElementById('vilaCmimi').innerText = "€" + vila.cmimi;
+                    
+                    const telPaster = vila.tel ? vila.tel.toString().replace(/\D/g, '') : "";
+                    document.getElementById('waLink').href = `https://wa.me/${telPaster}?text=Përshëndetje! Jam i interesuar për rezervimin e vilës: ${vila.emri}`;
+
+                    // Amenitetet
+                    const amenitiesWrapper = document.getElementById('amenitiesWrapper');
+                    if (vila.amenities && Array.isArray(vila.amenities)) {
+                        vila.amenities.forEach(key => {
+                            if (amenityIcons[key]) {
+                                const item = document.createElement('div');
+                                item.className = "amenity-item";
+                                item.innerHTML = `<i class="fa-solid ${amenityIcons[key].icon}"></i> ${amenityIcons[key].name}`;
+                                amenitiesWrapper.appendChild(item);
+                            }
+                        });
+                    }
+
+                    // Harta Leaflet
+                    if (vila.lat && vila.lng) {
+                        setTimeout(() => {
+                            const map = L.map('map', { scrollWheelZoom: false }).setView([vila.lat, vila.lng], 14);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '&copy; Vila n\'Kosovë'
+                            }).addTo(map);
+                            L.marker([vila.lat, vila.lng]).addTo(map).bindPopup(vila.emri).openPopup();
+                        }, 500);
+                    } else {
+                        document.getElementById('mapSection').style.display = 'none';
+                    }
+
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('content').classList.add('loaded');
+                } else {
+                    document.getElementById('loader').innerText = "Vila nuk u gjet!";
+                }
+            });
+        }
+
+        function moveSlide(direction) {
+            currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+            updateSlider();
+        }
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlider();
+        }
+        function updateSlider() {
+            document.getElementById('sliderWrapper').style.transform = `translateX(-${currentSlide * 100}%)`;
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
+        }
+    </script>
+</body>
+</html>

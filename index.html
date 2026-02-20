@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vila n'Kosovë | Platforma Ekskluzive e Vilave</title>
+    
+    <link rel="stylesheet" href="listing.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0ea5e9">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        /* RREGULLIMET RESPONSIVE & MOBILE MENU */
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #0f172a;
+        }
+
+        @media (max-width: 768px) {
+            .hamburger { display: block; }
+            
+            .nav-links-wrapper {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                height: 100vh;
+                width: 75%;
+                background: white;
+                flex-direction: column;
+                padding: 80px 30px;
+                transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+                gap: 25px;
+                display: flex !important;
+                z-index: 2000;
+            }
+
+            .nav-links-wrapper.active { right: 0; }
+            .nav-actions { gap: 15px; }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 30px;
+                margin-top: -30px;
+                padding: 30px;
+            }
+
+            .hero h1 { font-size: 1.8rem; padding: 0 10px; }
+            .hero p { font-size: 1rem; }
+            
+            .search-box {
+                width: 90% !important;
+                margin: 2rem auto 0;
+            }
+        }
+
+        /* Kategoritë dhe Destinacionet */
+        .category-filter {
+            display: flex;
+            justify-content: flex-start; 
+            gap: 30px;
+            padding: 30px 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        @media (min-width: 769px) { .category-filter { justify-content: center; } }
+        
+        .category-filter::-webkit-scrollbar { display: none; }
+
+        .cat-item {
+            text-align: center;
+            cursor: pointer;
+            color: #64748b;
+            transition: 0.3s;
+            min-width: 90px;
+            flex-shrink: 0;
+        }
+        .cat-item i { font-size: 1.8rem; margin-bottom: 8px; display: block; }
+        .cat-item:hover, .cat-item.active { color: #0ea5e9; transform: translateY(-5px); }
+
+        .popular-destinations {
+            padding: 40px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .dest-card {
+            position: relative;
+            height: 140px;
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .dest-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+        .dest-card:hover img { transform: scale(1.1); }
+        .dest-card span {
+            position: absolute; bottom: 15px; left: 15px;
+            color: white; font-weight: 700; font-size: 1.1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+        .dest-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.4));
+        }
+
+        .stats-bar {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            margin-top: -60px;
+            position: relative;
+            z-index: 20;
+        }
+        .stat-item { text-align: center; }
+        .stat-item h3 { color: #0ea5e9; font-size: 2.2rem; margin-bottom: 5px; font-weight: 800; }
+        .stat-item p { color: #64748b; font-weight: 500; }
+
+        .count-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .close-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            display: none;
+            cursor: pointer;
+        }
+        @media (max-width: 768px) { .close-menu { display: block; } }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer">
+            Vila n'<span>Kosovë</span>
+        </div>
+        <div class="nav-actions">
+            <div class="nav-links-wrapper" id="navLinks">
+                <i class="fa-solid fa-xmark close-menu" onclick="toggleMenu()"></i>
+                <a href="index.html" class="nav-link active">Ballina</a>
+                <a href="eksploro.html" class="nav-link">Eksploro</a>
+                <a href="rreth-nesh.html" class="nav-link">Rreth nesh</a>
+            </div>
+            <a href="login.html" class="btn-primary"><i class="fa-solid fa-plus" style="margin-right: 8px;"></i> <span>Shto Vilën</span></a>
+            <div class="hamburger" onclick="toggleMenu()">
+                <i class="fa-solid fa-bars-staggered"></i>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-bg-container" id="heroSlider">
+            <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1587061949733-762410305ba0?auto=format&fit=crop&q=80&w=1600')"></div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=1600')"></div>
+        </div>
+        
+        <div class="hero-content" data-aos="fade-up" data-aos-duration="1000">
+            <h1>Zbuloni Parajsën tuaj në Kosovë</h1>
+            <p>Nga alpet deri te luginat, gjej vendin perfekt për pushimet tuaja.</p>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass" style="margin-left: 15px; color: #64748b;"></i>
+                <input type="text" id="searchInput" placeholder="Ku dëshironi të shkoni?">
+                <button id="searchBtn">Kërko</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stats-bar" data-aos="zoom-in" data-aos-delay="200">
+            <div class="stat-item">
+                <h3 class="counter" data-target="100">0</h3>
+                <p>Vila të Verifikuara</p>
+            </div>
+            <div class="stat-item">
+                <h3 class="counter" data-target="15">0</h3>
+                <p>Lokacione</p>
+            </div>
+            <div class="stat-item">
+                <h3 class="counter" data-target="24">0</h3>
+                <p>Mbështetje 24/7</p>
+            </div>
+        </div>
+
+        <div class="category-filter" data-aos="fade-right" data-aos-delay="400">
+            <div class="cat-item active" onclick="filtroSipasKategorise('Të gjitha', this)">
+                <i class="fa-solid fa-house-chimney"></i><span>Të gjitha</span>
+            </div>
+            <div class="cat-item" onclick="filtroSipasKategorise('Me Pishinë', this)">
+                <i class="fa-solid fa-water-ladder"></i><span>Me Pishinë</span>
+            </div>
+            <div class="cat-item" onclick="filtroSipasKategorise('Në Mal', this)">
+                <i class="fa-solid fa-mountain-sun"></i><span>Në Mal</span>
+            </div>
+            <div class="cat-item" onclick="filtroSipasKategorise('Me Oxhak', this)">
+                <i class="fa-solid fa-fire-burner"></i><span>Me Oxhak</span>
+            </div>
+            <div class="cat-item" onclick="filtroSipasKategorise('Tradicionale', this)">
+                <i class="fa-solid fa-tree"></i><span>Tradicionale</span>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 40px; font-weight: 800; letter-spacing: -0.5px; padding-left: 10px;" data-aos="fade-up">Destinacionet kryesore</h2>
+        
+        <div class="popular-destinations" style="padding: 20px 10px;" data-aos="fade-up" data-aos-delay="200">
+            <div class="dest-card" onclick="kerkoSipasQytetit('Rugovë')">
+                <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=400" alt="Rugova">
+                <span>Rugovë</span>
+            </div>
+            <div class="dest-card" onclick="kerkoSipasQytetit('Brezovicë')">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=400" alt="Brezovica">
+                <span>Brezovicë</span>
+            </div>
+            <div class="dest-card" onclick="kerkoSipasQytetit('Prevallë')">
+                <img src="https://images.unsplash.com/photo-1433838552652-f9a46b332c40?auto=format&fit=crop&q=80&w=400" alt="Prevalle">
+                <span>Prevallë</span>
+            </div>
+            <div class="dest-card" onclick="kerkoSipasQytetit('Batllavë')">
+                <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&q=80&w=400" alt="Batllava">
+                <span>Batllavë</span>
+            </div>
+        </div>
+
+        <div class="section-header" style="margin-top: 60px; padding: 0 10px;" data-aos="fade-up">
+            <div>
+                <h2 id="titulliSeksionit" style="font-weight: 800; letter-spacing: -0.5px;">Vilat Ekskluzive</h2>
+                <p style="color: #64748b;">Ofertat tona më të mira për momentin</p>
+            </div>
+            <div id="countText" class="count-badge">Duke kërkuar...</div>
+        </div>
+
+        <div id="listingsGrid" class="listings-grid" style="padding: 20px 10px;" data-aos="fade-up"></div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <p class="copyright">&copy; 2026 <span>Vila n'Kosovë</span>. Të gjitha të drejtat e rezervuara.</p>
+                <p class="credits">
+                    Ndërtuar nga <a href="https://www.ensargashi.com/" target="_blank" class="author-link">Ensar Gashi</a>
+                </p>
+            </div>
+            
+            <div class="footer-socials">
+                <a href="mailto:info.vilakosove@gmail.com" class="social-icon gm" title="Email"><i class="fa-solid fa-envelope"></i></a>
+                <a href="https://www.facebook.com/ensar.gashi.940" class="social-icon fb" target="_blank" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="https://wa.me/38349200528" class="social-icon wa" target="_blank" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                <a href="https://www.linkedin.com/in/ensar-gashi/" class="social-icon li" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Inicializimi i AOS (Scroll Animations)
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
+
+        // Funksioni për numërimin e statistikave
+        function startCounting() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const increment = target / 50;
+                let current = 0;
+
+                const update = () => {
+                    if (current < target) {
+                        current += increment;
+                        counter.innerText = Math.ceil(current) + (target === 24 ? "/7" : "+");
+                        setTimeout(update, 30);
+                    } else {
+                        counter.innerText = target + (target === 24 ? "/7" : "+");
+                    }
+                };
+                update();
+            });
+        }
+
+        // Aktivizo numërimin kur përdoruesi mbërrin te stats-bar
+        let counted = false;
+        window.addEventListener('scroll', () => {
+            const statsBar = document.querySelector('.stats-bar');
+            if(statsBar) {
+                const rect = statsBar.getBoundingClientRect();
+                if(rect.top < window.innerHeight && !counted) {
+                    startCounting();
+                    counted = true;
+                }
+            }
+        });
+
+        function toggleMenu() {
+            const menu = document.getElementById('navLinks');
+            menu.classList.toggle('active');
+        }
+
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.hero-slide');
+        function nextSlide() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+        if(slides.length > 1) { setInterval(nextSlide, 5000); }
+    </script>
+    <script src="listing.js"></script>
+</body>
+</html>
