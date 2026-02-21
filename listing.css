@@ -467,7 +467,12 @@ body {
 .social-icon.fb:hover { background: #1877f2; border-color: #1877f2; }
 .social-icon.wa:hover { background: #25d366; border-color: #25d366; }
 .social-icon.gm:hover { background: #ea4335; border-color: #ea4335; }
-
+/* Stili për ikonën e Instagramit */
+.social-icon.ig:hover {
+    background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+    color: #fff !important;
+    border-color: transparent;
+}
 /* RESPONSIVE */
 @media (max-width: 1024px) {
     .container { padding: 4rem 5%; }
