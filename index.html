@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vila n'Kosovë | Platforma Ekskluzive e Vilave</title>
     
+    <link rel="icon" type="image/png" href="favicona.png">
+    <link rel="apple-touch-icon" href="favicona.png">
+    <link rel="shortcut icon" href="favicona.png">
+
     <link rel="stylesheet" href="listing.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0ea5e9">
@@ -22,6 +26,7 @@
             color: #0f172a;
         }
 
+        /* FIX PËR BUTONIN NË TELEFON */
         @media (max-width: 768px) {
             .hamburger { display: block; }
             
@@ -42,7 +47,14 @@
             }
 
             .nav-links-wrapper.active { right: 0; }
-            .nav-actions { gap: 15px; }
+            .nav-actions { gap: 10px; }
+
+            /* Zvogëlimi i butonit shto vilën në mobile */
+            .btn-shto-vilen {
+                padding: 8px 12px !important;
+                font-size: 0.85rem !important;
+            }
+            .btn-shto-vilen span { display: none; }
 
             .stats-bar {
                 flex-direction: column;
@@ -164,7 +176,7 @@
                 <a href="eksploro.html" class="nav-link">Eksploro</a>
                 <a href="rreth-nesh.html" class="nav-link">Rreth nesh</a>
             </div>
-            <a href="login.html" class="btn-primary"><i class="fa-solid fa-plus" style="margin-right: 8px;"></i> <span>Shto Vilën</span></a>
+            <a href="login.html" class="btn-primary btn-shto-vilen"><i class="fa-solid fa-plus"></i> <span>Shto Vilën</span></a>
             <div class="hamburger" onclick="toggleMenu()">
                 <i class="fa-solid fa-bars-staggered"></i>
             </div>
@@ -281,37 +293,60 @@
             offset: 100
         });
 
-        // Funksioni për numërimin e statistikave
+        // FUNKSIONI I RI DHE I SHPEJTË PËR NUMËRIMIN
         function startCounting() {
             const counters = document.querySelectorAll('.counter');
             counters.forEach(counter => {
                 const target = +counter.getAttribute('data-target');
-                const increment = target / 50;
+                const duration = 1500; // Kohëzgjatja 1.5 sekonda
+                const increment = target / (duration / 30);
                 let current = 0;
 
                 const update = () => {
                     if (current < target) {
                         current += increment;
-                        counter.innerText = Math.ceil(current) + (target === 24 ? "/7" : "+");
+                        let displayVal = Math.ceil(current);
+                        // Formatimi special për 24/7
+                        counter.innerText = (target === 24) ? displayVal + "/7" : displayVal + "+";
                         setTimeout(update, 30);
                     } else {
-                        counter.innerText = target + (target === 24 ? "/7" : "+");
+                        counter.innerText = (target === 24) ? target + "/7" : target + "+";
                     }
                 };
                 update();
             });
         }
 
-        // Aktivizo numërimin kur përdoruesi mbërrin te stats-bar
-        let counted = false;
-        window.addEventListener('scroll', () => {
-            const statsBar = document.querySelector('.stats-bar');
-            if(statsBar) {
-                const rect = statsBar.getBoundingClientRect();
-                if(rect.top < window.innerHeight && !counted) {
+        // PËRDORIMI I INTERSECTION OBSERVER PËR AKTIVIZIM TË MENJËHERSHËM
+        const observerOptions = {
+            threshold: 0.1 // Aktivizohet sapo të shihet pak pjesë e stats-bar
+        };
+
+        const statsObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
                     startCounting();
-                    counted = true;
+                    observer.unobserve(entry.target); // E bën vetëm një herë
                 }
+            });
+        }, observerOptions);
+
+        // Ngarkimi i funksioneve kur struktura është gati
+        document.addEventListener('DOMContentLoaded', () => {
+            const statsBar = document.querySelector('.stats-bar');
+            if (statsBar) {
+                statsObserver.observe(statsBar);
+            }
+
+            // Slider i Hero-it
+            let currentSlide = 0;
+            const slides = document.querySelectorAll('.hero-slide');
+            if(slides.length > 1) {
+                setInterval(() => {
+                    slides[currentSlide].classList.remove('active');
+                    currentSlide = (currentSlide + 1) % slides.length;
+                    slides[currentSlide].classList.add('active');
+                }, 5000);
             }
         });
 
@@ -319,15 +354,6 @@
             const menu = document.getElementById('navLinks');
             menu.classList.toggle('active');
         }
-
-        let currentSlide = 0;
-        const slides = document.querySelectorAll('.hero-slide');
-        function nextSlide() {
-            slides[currentSlide].classList.remove('active');
-            currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].classList.add('active');
-        }
-        if(slides.length > 1) { setInterval(nextSlide, 5000); }
     </script>
     <script src="listing.js"></script>
 </body>
