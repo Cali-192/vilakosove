@@ -474,9 +474,22 @@ body {
 }
 
 @media (max-width: 768px) {
-    .navbar { padding: 1rem 5%; }
-    .nav-actions { gap: 1rem; }
-    /* Menuja shfaqet përmes klasës active në JS */
+    .navbar { padding: 0.8rem 5%; } /* Pakësuar paddingu */
+    .nav-actions { gap: 0.8rem; } /* Pakësuar gap-i që të mos zënë vend */
+    
+    /* FIX PËR BUTONIN SHTO VILËN NË MOBILE */
+    .btn-shto-vilen {
+        padding: 8px 14px;
+        font-size: 0.8rem;
+    }
+    .btn-shto-vilen span {
+        display: none; /* Fsheh tekstin në telefon */
+    }
+    .btn-shto-vilen i {
+        margin: 0 !important;
+        font-size: 1.1rem;
+    }
+
     .nav-links-wrapper { display: none; } 
     .hero { height: 70vh; }
     .hero-content h1 { font-size: 2.2rem; }
