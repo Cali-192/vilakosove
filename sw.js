@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vila-kosove-v2'; // Ndryshuam versionin për të rifreskuar cache-in
+const CACHE_NAME = 'vila-kosove-v4'; // Versioni v4 detyron rifreskimin e ikonës së re
 const assets = [
   '/',
   '/index.html',
@@ -7,23 +7,23 @@ const assets = [
   '/detajet.html',
   '/listing.css',
   '/listing.js',
-  '/ikona-192.png',
-  '/ikona-512.png',
-  '/favicon.ico'
+  '/favicona.png', // Emri i saktë i ikonës tënde
+  '/manifest.json'
 ];
 
 // Instalimi i Service Worker
 self.addEventListener('install', evt => {
   evt.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      console.log('Duke ruajtur resurset në cache...');
-      // Përdorim addAll me kujdes, nëse një file mungon, catch do ta parandalojë dështimin
-      return cache.addAll(assets).catch(err => console.error('Gabim gjatë caching:', err));
+      console.log('Duke ruajtur resurset e reja në cache (v4)...');
+      return cache.addAll(assets).catch(err => {
+        console.error('Gabim gjatë caching: Sigurohu që favicona.png dhe skedarët e tjerë janë në folderin kryesor.', err);
+      });
     })
   );
 });
 
-// Aktivizimi - Pastron cache-in e vjetër nëse ekziston
+// Aktivizimi - Pastron cache-in e vjetër (v1, v2, v3)
 self.addEventListener('activate', evt => {
   evt.waitUntil(
     caches.keys().then(keys => {
@@ -33,17 +33,18 @@ self.addEventListener('activate', evt => {
       );
     })
   );
-  console.log('Service Worker i ri u aktivizua.');
+  console.log('Service Worker i ri (v4) u aktivizua.');
 });
 
-// Marrja e të dhënave (Fetch)
+// Marrja e të dhënave (Fetch Strategy: Cache First, then Network)
 self.addEventListener('fetch', evt => {
   evt.respondWith(
     caches.match(evt.request).then(cacheRes => {
-      // Kthen resursin nga cache, ose bën kërkesën në rrjet
+      // Kthen resursin nga cache nëse ekziston, përndryshe e kërkon në rrjet
       return cacheRes || fetch(evt.request).catch(err => {
-        // Këtu kapet gabimi "Failed to fetch" (psh. kur wttr.in dështon)
-        console.warn('Rrjeti dështoi për:', evt.request.url);
+        if (evt.request.mode === 'navigate') {
+          console.warn('Jeni offline. Disa faqe mund të mos ngarkohen.');
+        }
       });
     })
   );
