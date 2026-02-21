@@ -41,6 +41,8 @@ function inicializoHeroSlider() {
         'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=80'
     ];
 
+    // Pastrojmë container-in para se të shtojmë sllajdet
+    bgContainer.innerHTML = '';
     sfondet.forEach((url, i) => {
         const slide = document.createElement('div');
         slide.className = `hero-slide ${i === 0 ? 'active' : ''}`;
@@ -52,6 +54,7 @@ function inicializoHeroSlider() {
     let currentIndex = 0;
 
     setInterval(() => {
+        if (slides.length === 0) return;
         slides[currentIndex].classList.remove('active');
         currentIndex = (currentIndex + 1) % slides.length;
         slides[currentIndex].classList.add('active');
@@ -111,8 +114,8 @@ function shfaqVilat(data) {
                     </div>
                     <h3>${vila.emri || 'Vila Premium'}</h3>
                     <div style="display: flex; gap: 15px; color: #64748b; font-size: 0.85rem; font-weight: 600;">
-                        <span><i class="fa-solid fa-bed"></i> 3 Dhoma</span>
-                        <span><i class="fa-solid fa-bath"></i> 2 Banjo</span>
+                        <span><i class="fa-solid fa-bed"></i> ${vila.dhomat || '3'} Dhoma</span>
+                        <span><i class="fa-solid fa-bath"></i> ${vila.banjot || '2'} Banjo</span>
                     </div>
                 </div>
             </div>
@@ -130,22 +133,65 @@ function përditësoNumruesin(numri) {
     }
 }
 
-// Përditësimi i statistikave në faqen kryesore (vlerat live)
+// FUNKSIONI PËR ANIMACIONIN E NUMRAVE
+function animoNumrat(id, target) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    
+    let current = 0;
+    const duration = 2000; // Kohëzgjatja totale
+    const stepTime = 30; // Shpejtësia e rifreskimit
+    const increment = target / (duration / stepTime);
+
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            el.innerText = target + (id === 'countVila' || id === 'countQytete' ? "+" : "/7");
+            clearInterval(timer);
+        } else {
+            el.innerText = Math.ceil(current) + (id === 'countVila' || id === 'countQytete' ? "+" : "/7");
+        }
+    }, stepTime);
+}
+
+// Përditësimi i statistikave live
+let statsAnimated = false;
 function përditësoStatistikat(data) {
-    const vilaCount = document.getElementById('countVila');
-    const qytetCount = document.getElementById('countQytete');
-    
-    if (vilaCount) vilaCount.innerText = data.length + "+";
-    
-    if (qytetCount) {
-        const qytetetUnique = [...new Set(data.map(v => v.lokacioni))].length;
-        qytetCount.innerText = qytetetUnique + "+";
+    const totalVila = data.length;
+    // Gjejmë sa lokacione unike janë (Rugovë, Brezovicë, etj.)
+    const qytetetUnique = [...new Set(data.map(v => v.lokacioni))].filter(l => l).length;
+
+    // Vendos vlerat reale në data-target për elementet counter
+    const vCountEl = document.getElementById('countVila');
+    const qCountEl = document.getElementById('countQytete');
+
+    if(vCountEl) vCountEl.setAttribute('data-target', totalVila);
+    if(qCountEl) qCountEl.setAttribute('data-target', qytetetUnique);
+
+    // Nisim animacionin vetëm një herë
+    if(!statsAnimated) {
+        const statsBar = document.querySelector('.stats-bar');
+        if(statsBar) {
+            const observer = new IntersectionObserver((entries) => {
+                if(entries[0].isIntersecting) {
+                    setTimeout(() => {
+                        animoNumrat('countVila', totalVila);
+                        animoNumrat('countQytete', qytetetUnique);
+                        // Nëse keni një stat të tretë si p.sh mbështetja 24/7:
+                        animoNumrat('countSupport', 24); 
+                    }, 300);
+                    statsAnimated = true;
+                    observer.disconnect();
+                }
+            }, { threshold: 0.5 });
+            observer.observe(statsBar);
+        }
     }
 }
 
 // 5. Filtrimi sipas Kategorive
 window.filtroSipasKategorise = function(kategoria, element) {
-    document.querySelectorAll('.category-item').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('.cat-item').forEach(item => item.classList.remove('active'));
     if (element) element.classList.add('active');
 
     const titulli = document.getElementById('titulliSeksionit');
@@ -214,11 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof AOS !== 'undefined') {
         AOS.init({
             duration: 800,
-            once: true
+            once: true,
+            offset: 100
         });
     }
 });
 
+// Service Worker Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
